@@ -1,47 +1,52 @@
+import Matter from "matter-js";
+        
 document.addEventListener("DOMContentLoaded", () => {
-    const canvas = document.createElement("canvas") as HTMLCanvasElement;
+    const {
+        Engine,
+        Render,
+        Runner,
+        Composites,
+        Composite,
+        Bodies
+    } = Matter;
 
-    const size: number = 200;
+    const engine = Engine.create();
 
-    canvas.height = size;
-    canvas.width = size;
+    const world = engine.world;
 
-    document.body.appendChild(canvas);
 
-    const ctxNullable: CanvasRenderingContext2D | null = canvas.getContext("2d");
-
-    if (!ctxNullable) {
-        return;
-    }
-
-    const ctx: CanvasRenderingContext2D = ctxNullable;
-
-    function init() {
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, size, size);
-
-        ctx.fillStyle = "#abcdef";
-
-        let i = 1;
-
-        for (let y = 10; y < size; y += 20) {
-            for (let x = i * 10; x < size; x += 20) {
-                ctx.fillRect(x, y, 10, 10);
-            }
-
-            i = (i + 1) % 2;
+    // create renderer
+    var render = Render.create({
+        element: document.body,
+        engine: engine,
+        options: {
+            width: 800,
+            height: 600,
+            showAngleIndicator: true
         }
+    });
 
-        window.requestAnimationFrame(draw);
-    }
+    Render.run(render);
 
-    let count = 0;
+    var runner = Runner.create();
+    Runner.run(runner, engine);
+    // add bodies
 
-    function draw() {
-        if (++count < 300) {
-            window.requestAnimationFrame(draw);
-        }
-    }
+    var stack = Composites.stack(100, 600 - 21 - 20 * 20, 10, 10, 20, 0, function (x: number, y: number) {
+        return Bodies.circle(x, y, 20);
+    });
 
-    window.requestAnimationFrame(init);
+    Composite.add(world, [
+        // walls
+        Bodies.rectangle(400, 0, 800, 50, { isStatic: true }),
+        Bodies.rectangle(400, 600, 800, 50, { isStatic: true }),
+        Bodies.rectangle(800, 300, 50, 600, { isStatic: true }),
+        Bodies.rectangle(0, 300, 50, 600, { isStatic: true }),
+        stack
+    ]);
+
+    Render.lookAt(render, {
+        min: { x: 0, y: 0 },
+        max: { x: 800, y: 600 }
+    });
 });
