@@ -41,14 +41,14 @@ Example.galton = function () {
     let total = 1400;
     setInterval(() => {
         if (total-- > 0) {
-            const circle = Bodies.circle(250 + (-0.5 + Math.random()), -20, size, {
+            const circle = Bodies.circle(250 + (Math.random() - 0.5), -20, size, {
                 friction: 0.00001,
-                restitution: 0.5,
+                restitution: 0.00001,
                 density: 0.001,
                 frictionAir: 0.042,
                 sleepThreshold: 25,
                 render: {
-                    fillStyle: "#ff00ff",
+                    fillStyle: "#00ff00",
                     visible: true
                 }
             });
