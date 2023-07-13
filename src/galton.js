@@ -1,35 +1,132 @@
-import Matter from "matter-js";
-document.addEventListener("DOMContentLoaded", () => {
-    const { Engine, Render, Runner, Composites, Composite, Bodies } = Matter;
-    const engine = Engine.create();
-    const world = engine.world;
+var Example = Example || {};
+
+Example.galton = function () {
+    var Engine = Matter.Engine,
+        Render = Matter.Render,
+        Runner = Matter.Runner,
+        Composite = Matter.Composite,
+        Composites = Matter.Composites,
+        Common = Matter.Common,
+        MouseConstraint = Matter.MouseConstraint,
+        Mouse = Matter.Mouse,
+        World = Matter.World,
+        Bodies = Matter.Bodies;
+
+    // create engine
+    var engine = Engine.create({
+        enableSleeping: true
+    }),
+        world = engine.world;
+
     // create renderer
     var render = Render.create({
         element: document.body,
         engine: engine,
         options: {
-            width: 800,
-            height: 600,
-            showAngleIndicator: true
+            width: 500,
+            height: 830,
+            wireframes: false
         }
     });
+
     Render.run(render);
+
+    // create runner
     var runner = Runner.create();
     Runner.run(runner, engine);
+
+    const size = 4;
+
     // add bodies
-    var stack = Composites.stack(100, 600 - 21 - 20 * 20, 10, 10, 20, 0, function (x, y) {
-        return Bodies.circle(x, y, 20);
-    });
-    Composite.add(world, [
-        // walls
-        Bodies.rectangle(400, 0, 800, 50, { isStatic: true }),
-        Bodies.rectangle(400, 600, 800, 50, { isStatic: true }),
-        Bodies.rectangle(800, 300, 50, 600, { isStatic: true }),
-        Bodies.rectangle(0, 300, 50, 600, { isStatic: true }),
-        stack
-    ]);
-    Render.lookAt(render, {
-        min: { x: 0, y: 0 },
-        max: { x: 800, y: 600 }
-    });
-});
+    let total = 1400;
+    setInterval(() => {
+        if (total-- > 0) {
+            const circle = Bodies.circle(250 + (-0.5 + Math.random()), -20, size, {
+                friction: 0.00001,
+                restitution: 0.5,
+                density: 0.001,
+                frictionAir: 0.042,
+                sleepThreshold: 25,
+                render: {
+                    fillStyle: "#ff00ff",
+                    visible: true
+                }
+            });
+
+            Matter.Events.on(circle, "sleepStart", () => {
+                Matter.Body.setStatic(circle, true);
+            });
+            World.add(world, circle);
+        }
+    }, 10);
+
+    const pegs = [];
+    const spacingY = 35;
+    const spacingX = 40;
+    var i, j, lastI;
+    for (i = 0; i < 13; i++) {
+        for (j = 1; j < i; j++) {
+            pegs.push(
+                Bodies.circle(
+                    250 + (j * spacingX - i * (spacingX / 2)),
+                    i * spacingY,
+                    size,
+                    {
+                        isStatic: true,
+                        render: {
+                            fillStyle: "#ffffff",
+                            visible: true
+                        }
+                    }
+                )
+            );
+        }
+        lastI = i;
+    }
+    for (i = 0; i < 15; i++) {
+        World.add(
+            world,
+            Bodies.rectangle(
+                110 - spacingX + (j * spacingX - i * spacingX),
+                lastI * spacingY + 215,
+                size * 2,
+                lastI + 300,
+                {
+                    isStatic: true,
+                    render: {
+                        fillStyle: "#ffffff",
+                        visible: true
+                    },
+                    chamfer: {
+                        radius: [size * 0.4, size * 0.4, 0, 0]
+                    }
+                }
+            )
+        );
+    }
+    World.add(
+        world,
+        Bodies.rectangle(250, lastI * 1.33 * spacingY + 257, 1000, 50, {
+            isStatic: true,
+            render: {
+                fillStyle: "#ffffff",
+                visible: true
+            }
+        })
+    );
+
+    World.add(world, pegs);
+
+    return {
+        engine: engine,
+        runner: runner,
+        render: render,
+        canvas: render.canvas,
+        stop: function () {
+            Matter.Render.stop(render);
+            Matter.Runner.stop(runner);
+        }
+    };
+};
+
+Example.galton();
